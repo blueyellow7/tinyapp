@@ -28,14 +28,14 @@
         </thead>
         <tbody>
           <% for (let id in urls) { %> 
-            <!-- for in loops through keys. id = each key in the urlDatabase object -->
+            <!-- for in loops through keys. id = each key in the url object (called urlsDatabase in express_server.js) -->
 
             <tr> <!-- tr= each row in the table. td= each column in the row -->
               <td><%= id %></td> 
-                <!-- first column contains short url, aka the key of the urlDatabase object -->
+                <!-- first column contains short url, aka the key of the url object -->
 
               <td><%= urls[id] %></td>
-                <!-- 2nd column contains the long url, aka the value in the urlDatabase object -->
+                <!-- 2nd column contains the long url, aka the value in the url object -->
             </tr>
           <% } %>
         </tbody>
