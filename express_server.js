@@ -21,9 +21,9 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
+// app.get("/hello", (req, res) => {
+//   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
@@ -36,9 +36,9 @@ app.get("/urls/new", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const id = generateRandomString(); 
-    // generate new short url
+    // generate new short url/id (new key)
   urlDatabase[id] = req.body.longURL; 
-    // takes input from form (req.body = { longURL: new link }) and adds it to urlDatabase
+    // takes input from form (req.body = {longURL: new link input} ) and adds key/value pair to urlDatabase
   console.log(urlDatabase);
     // make sure new longURL and new id/shortURL are added to database
   res.redirect(`/urls/${id}`); 
