@@ -45,6 +45,12 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${id}`); 
 });
 
+// Set input from username form as a cookie
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username);
+  res.redirect("/urls");
+});
+
 // Display single url (READ)
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
