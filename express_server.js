@@ -63,10 +63,14 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+// Edit and update url (UPDATE)
+app.post("/urls/:id", (req, res) => {
+  console.log(req.body)
+  urlDatabase[req.params.id] = req.body.urlEdit
+  res.redirect("/urls");
 });
 
 
-// update user object eg.
-// users["5315"].first_name = "Jane"
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
