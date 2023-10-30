@@ -1,5 +1,7 @@
 const express = require("express");
+const cookieParser = require('cookie-parser');
 const app = express();
+app.use(cookieParser());
 const PORT = 8000;
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
@@ -27,13 +29,19 @@ app.get("/hello", (req, res) => {
 
 // Display all urls (READ)
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies["username"] 
+  };
   res.render("urls_index.ejs", templateVars);
 });
 
 // Display page to input new url (READ) 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new.ejs");
+  const templateVars = { 
+    username: req.cookies["username"]
+  };
+  res.render("urls_new.ejs", templateVars);
 });
 
 // Create new url. Redirect to its single url page (CREATE)
@@ -53,7 +61,11 @@ app.post("/login", (req, res) => {
 
 // Display single url (READ)
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { 
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id],
+    username: req.cookies["username"]
+  };
   res.render("urls_show.ejs", templateVars);
 });
 
