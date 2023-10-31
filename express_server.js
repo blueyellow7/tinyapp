@@ -59,6 +59,12 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
+// clear cookie (logs you out) 
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect("/urls");
+});
+
 // Display single url (READ)
 app.get("/urls/:id", (req, res) => {
   const templateVars = { 
