@@ -15,6 +15,19 @@ function generateRandomString() {
   return Math.random().toString(36).slice(2, 8);
 }
 
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -31,7 +44,7 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
-    username: req.cookies["username"] 
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_index.ejs", templateVars);
 });
@@ -39,7 +52,7 @@ app.get("/urls", (req, res) => {
 // Display page to input new url (READ) 
 app.get("/urls/new", (req, res) => {
   const templateVars = { 
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_new.ejs", templateVars);
 });
@@ -58,26 +71,39 @@ app.post("/login", (req, res) => {
   res.cookie("username", req.body.username);
   res.redirect("/urls");
 });
-
 // clear cookie (logs you out) 
 app.post("/logout", (req, res) => {
   res.clearCookie("username");
   res.redirect("/urls");
 });
 
+// display registration form
 app.get("/register", (req, res) => {
   const templateVars = { 
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_register.ejs", templateVars);
 });
+
+// handle registration form
+app.post("/register", (req, res) => {
+  const user = generateRandomString();
+  users[user] = { 
+    id: `${user}`,
+    email: `${req.body.email}`,
+    password: `${req.body.password}` 
+  };
+  res.cookie("user_id", user);
+  res.redirect("/urls");
+});
+
 
 // Display single url (READ)
 app.get("/urls/:id", (req, res) => {
   const templateVars = { 
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_show.ejs", templateVars);
 });
