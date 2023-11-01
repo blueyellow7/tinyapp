@@ -75,14 +75,15 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${id}`); 
 });
 
-// Set input from username form as a cookie
-app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/urls");
-});
+// // Set input from username form as a cookie
+// app.post("/login", (req, res) => {
+//   res.cookie("username", req.body.username);
+//   res.redirect("/urls");
+// });
+
 // clear cookie (logs you out) 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
@@ -117,6 +118,19 @@ app.post("/register", (req, res) => {
   }
   console.log(users)
 });
+
+// display login form
+app.get("/login", (req, res) => {
+  const templateVars = { 
+    user: users[req.cookies["user_id"]]
+  };
+  res.render("urls_login.ejs", templateVars);
+});
+
+// handle login form
+app.post("/login", (req, res) => {
+});
+
 
 // Display single url (READ)
 app.get("/urls/:id", (req, res) => {
