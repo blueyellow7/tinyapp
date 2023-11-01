@@ -15,6 +15,15 @@ function generateRandomString() {
   return Math.random().toString(36).slice(2, 8);
 }
 
+const emailLookup = function (mail, database) {
+  for (let user in database) {
+    if (mail === database[user].email) {
+      return mail;
+    }
+  }
+  return undefined; // returns undefined if email does't already exist in the database
+};
+
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -88,15 +97,26 @@ app.get("/register", (req, res) => {
 // handle registration form
 app.post("/register", (req, res) => {
   const user = generateRandomString();
-  users[user] = { 
-    id: `${user}`,
-    email: `${req.body.email}`,
-    password: `${req.body.password}` 
-  };
-  res.cookie("user_id", user);
-  res.redirect("/urls");
-});
+  const email = req.body.email;
+  const password = req.body.password;
 
+  const emailInUsers = emailLookup(email, users);
+
+  if (!email || !password) {
+    res.status(400).end('<h1>400: Bad request!</h1><h2>Both username and password are required</h2>');
+  } else if (emailInUsers) {
+    res.status(400).end('<h1>400: Bad request!</h1><h2>This email is already registered</h2>');
+  } else {
+    users[user] = { 
+      id: `${user}`,
+      email: `${email}`,
+      password: `${password}` 
+    };
+    res.cookie("user_id", user);
+    res.redirect("/urls");
+  }
+  console.log(users)
+});
 
 // Display single url (READ)
 app.get("/urls/:id", (req, res) => {
