@@ -15,10 +15,10 @@ function generateRandomString() {
   return Math.random().toString(36).slice(2, 8);
 }
 
-const emailLookup = function (mail, database) {
+const userObjectfromEmail = function (mail, database) {
   for (let user in database) {
     if (mail === database[user].email) {
-      return mail;
+      return database[user];
     }
   }
   return undefined; // returns undefined if email does't already exist in the database
@@ -75,18 +75,6 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${id}`); 
 });
 
-// // Set input from username form as a cookie
-// app.post("/login", (req, res) => {
-//   res.cookie("username", req.body.username);
-//   res.redirect("/urls");
-// });
-
-// clear cookie (logs you out) 
-app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
-  res.redirect("/urls");
-});
-
 // display registration form
 app.get("/register", (req, res) => {
   const templateVars = { 
@@ -98,20 +86,20 @@ app.get("/register", (req, res) => {
 // handle registration form
 app.post("/register", (req, res) => {
   const user = generateRandomString();
-  const email = req.body.email;
-  const password = req.body.password;
+  const mail = req.body.email;
+  const pw = req.body.password;
 
-  const emailInUsers = emailLookup(email, users);
+  const existingUserObject = userObjectfromEmail(mail, users);
 
-  if (!email || !password) {
-    res.status(400).end('<h1>400: Bad request!</h1><h2>Both username and password are required</h2>');
-  } else if (emailInUsers) {
-    res.status(400).end('<h1>400: Bad request!</h1><h2>This email is already registered</h2>');
+  if (!mail || !pw) {
+    res.status(400).end('<h1>400: Bad request</h1><h2>Both username and password are required</h2>');
+  } else if (existingUserObject) {
+    res.status(400).end('<h1>400: Bad request</h1><h2>This email is already registered</h2>');
   } else {
     users[user] = { 
       id: `${user}`,
-      email: `${email}`,
-      password: `${password}` 
+      email: `${mail}`,
+      password: `${pw}` 
     };
     res.cookie("user_id", user);
     res.redirect("/urls");
@@ -129,8 +117,25 @@ app.get("/login", (req, res) => {
 
 // handle login form
 app.post("/login", (req, res) => {
+  const mail = req.body.email;
+  const pw = req.body.password;
+  const userObject = userObjectfromEmail(mail, users)
+
+  if (!userObject) {
+    res.status(403).end('<h1>403: Forbidden</h1><h2>Email is not registered</h2>');
+  } else if (mail !== userObject.email || pw !== userObject.password) {
+    res.status(403).end('<h1>403: Forbidden</h1><h2>Email and password do not match</h2>');
+  } else {
+    res.cookie("user_id", userObject.id);
+    res.redirect("/urls"); 
+  }
 });
 
+// clear cookie (logs you out) 
+app.post("/logout", (req, res) => {
+  res.clearCookie("user_id");
+  res.redirect("/login");
+});
 
 // Display single url (READ)
 app.get("/urls/:id", (req, res) => {
