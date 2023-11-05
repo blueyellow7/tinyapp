@@ -1,27 +1,30 @@
+/////////////////////////////////////////////////////////////////////////////
+// Set-up / Config
+/////////////////////////////////////////////////////////////////////////////
+
 const express = require("express");
-const cookieParser = require('cookie-parser');
 const app = express();
-app.use(cookieParser());
-const PORT = 8000;
 app.set("view engine", "ejs");
+const PORT = 8000;
+
+const cookieParser = require('cookie-parser');
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Middleware
+/////////////////////////////////////////////////////////////////////////////
+
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Functions / Variables
+/////////////////////////////////////////////////////////////////////////////
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
-};
-
-function generateRandomString() {
-  return Math.random().toString(36).slice(2, 8);
-}
-
-const userObjectfromEmail = function (mail, database) {
-  for (let user in database) {
-    if (mail === database[user].email) {
-      return database[user];
-    }
-  }
-  return undefined; // returns undefined if email does't already exist in the database
 };
 
 const users = {
@@ -37,19 +40,38 @@ const users = {
   },
 };
 
+const generateRandomString = function () {
+  return Math.random().toString(36).slice(2, 8);
+}
+
+const userObjectfromEmail = function (mail, database) {
+  for (let user in database) {
+    if (mail === database[user].email) {
+      return database[user];
+    }
+  }
+  return undefined; // returns undefined if email does't already exist in the database
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// Listener
+/////////////////////////////////////////////////////////////////////////////
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Routes
+/////////////////////////////////////////////////////////////////////////////
+
+// Redirect homepage to /urls
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/urls");
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
-// Display all urls (READ)
+// Display all urls - GET
 app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase,
@@ -58,7 +80,7 @@ app.get("/urls", (req, res) => {
   res.render("urls_index.ejs", templateVars);
 });
 
-// Display page to input new url (READ) 
+// Display page to input new url - GET
 app.get("/urls/new", (req, res) => {
   const templateVars = { 
     user: users[req.cookies["user_id"]]
@@ -66,16 +88,16 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new.ejs", templateVars);
 });
 
-// Create new url. Redirect to its single url page (CREATE)
+// Create new url. Redirect to its single url page - POST
 app.post("/urls", (req, res) => {
   const id = generateRandomString(); 
   urlDatabase[id] = req.body.longURL; 
-    // key = id, value = req.body.longURL -> add entry to urlDatabase object
+    // add entry to urlDatabase object -> key = id: value = req.body.longURL
   console.log(urlDatabase);
   res.redirect(`/urls/${id}`); 
 });
 
-// display registration form
+// Display registration form - GET
 app.get("/register", (req, res) => {
   const templateVars = { 
     user: users[req.cookies["user_id"]]
@@ -83,7 +105,7 @@ app.get("/register", (req, res) => {
   res.render("urls_register.ejs", templateVars);
 });
 
-// handle registration form
+// Handle registration form - POST
 app.post("/register", (req, res) => {
   const user = generateRandomString();
   const mail = req.body.email;
@@ -107,7 +129,7 @@ app.post("/register", (req, res) => {
   console.log(users)
 });
 
-// display login form
+// Display login form - GET
 app.get("/login", (req, res) => {
   const templateVars = { 
     user: users[req.cookies["user_id"]]
@@ -115,11 +137,11 @@ app.get("/login", (req, res) => {
   res.render("urls_login.ejs", templateVars);
 });
 
-// handle login form
+// Handle login form - GET
 app.post("/login", (req, res) => {
   const mail = req.body.email;
   const pw = req.body.password;
-  const userObject = userObjectfromEmail(mail, users)
+  const userObject = userObjectfromEmail(mail, users);
 
   if (!userObject) {
     res.status(403).end('<h1>403: Forbidden</h1><h2>Email is not registered</h2>');
@@ -131,13 +153,13 @@ app.post("/login", (req, res) => {
   }
 });
 
-// clear cookie (logs you out) 
+// Clear cookie (logs you out) - POST
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/login");
 });
 
-// Display single url (READ)
+// Display single url (GET)
 app.get("/urls/:id", (req, res) => {
   const templateVars = { 
     id: req.params.id,
@@ -147,26 +169,21 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show.ejs", templateVars);
 });
 
-// Redirect to actual website from given shortened url (READ)
+// Redirect to website from given shortened url - GET
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id]
+  const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
 
-// Delete url in 'all urls page'. Redirect back to all urls page (DELETE)
+// Edit and update a url - POST
+app.post("/urls/:id", (req, res) => {
+  console.log(req.body);
+  urlDatabase[req.params.id] = req.body.urlEdit;
+  res.redirect("/urls");
+});
+
+// Delete url - POST
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id]
   res.redirect("/urls");
-});
-
-// Edit and update url (UPDATE)
-app.post("/urls/:id", (req, res) => {
-  console.log(req.body)
-  urlDatabase[req.params.id] = req.body.urlEdit
-  res.redirect("/urls");
-});
-
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
 });
