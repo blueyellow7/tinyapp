@@ -23,8 +23,14 @@ app.use(express.urlencoded({ extended: true }));
 /////////////////////////////////////////////////////////////////////////////
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longUrl: "http://www.lighthouselabs.ca",
+    userID: 'randomuser1'
+  },
+  "9sm5xK": {
+    longUrl: "http://www.google.com",
+    userID: 'randomuser2'
+  }
 };
 
 const users = {
@@ -37,7 +43,7 @@ const users = {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk",
-  },
+  }
 };
 
 const generateRandomString = function () {
@@ -51,6 +57,16 @@ const userObjectfromEmail = function (mail, database) {
     }
   }
   return undefined; // returns undefined if email does't already exist in the database
+};
+
+const filterURLbyUserID = function (idOfUser) {
+  let objectOfUserURLS = {};
+  for (const shortUrl in urlDatabase) {
+    if (idOfUser === urlDatabase[shortUrl].userID) {
+      objectOfUserURLS[shortUrl] = urlDatabase[shortUrl];
+    }
+  }
+  return objectOfUserURLS;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -82,11 +98,10 @@ app.get("/urls", (req, res) => {
 
 // Display page to input new url - GET
 app.get("/urls/new", (req, res) => {
-  const templateVars = { 
-    user: users[req.cookies["user_id"]]
-  };
-
   if (req.cookies["user_id"]) {
+    const templateVars = { 
+      user: users[req.cookies["user_id"]]
+    };
     res.render("urls_new.ejs", templateVars);
   } else {
     res.redirect('/login')
