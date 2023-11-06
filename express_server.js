@@ -194,8 +194,12 @@ app.get("/urls/:id", (req, res) => {
 
 // Redirect to website from given shortened url - GET
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  const longUrl = urlDatabase[req.params.id]
+  if (longUrl) {
+    res.redirect(longUrl);
+  } else {
+    res.status(400).send('<h1>400: Bad Request</h1><h2>Url is not in database</h2>');
+  }
 });
 
 // Edit and update a url - POST
