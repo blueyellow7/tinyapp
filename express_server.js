@@ -95,11 +95,17 @@ app.get("/urls/new", (req, res) => {
 
 // Create new url. Redirect to its single url page - POST
 app.post("/urls", (req, res) => {
-  const id = generateRandomString(); 
-  urlDatabase[id] = req.body.longURL; 
-    // add entry to urlDatabase object -> key = id: value = req.body.longURL
-  console.log(urlDatabase);
-  res.redirect(`/urls/${id}`); 
+  if (req.cookies["user_id"]) {
+    const id = generateRandomString(); 
+    urlDatabase[id] = req.body.longURL; 
+      // add entry to urlDatabase object -> key = id: value = req.body.longURL
+    console.log(urlDatabase);
+    res.redirect(`/urls/${id}`); 
+
+  } else {
+    res.status(401).end('<h1>401: Forbidden</h1><h2>Must log in to shorten url</h2>');
+  }
+
 });
 
 // Display registration form - GET
