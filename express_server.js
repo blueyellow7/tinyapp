@@ -66,7 +66,7 @@ app.listen(PORT, () => {
 // Routes
 /////////////////////////////////////////////////////////////////////////////
 
-// Redirect homepage to /urls
+// Redirect home (/) to /urls
 app.get("/", (req, res) => {
   res.redirect("/urls");
 });
@@ -85,7 +85,12 @@ app.get("/urls/new", (req, res) => {
   const templateVars = { 
     user: users[req.cookies["user_id"]]
   };
-  res.render("urls_new.ejs", templateVars);
+
+  if (req.cookies["user_id"]) {
+    res.render("urls_new.ejs", templateVars);
+  } else {
+    res.redirect('/login')
+  }
 });
 
 // Create new url. Redirect to its single url page - POST
@@ -102,7 +107,13 @@ app.get("/register", (req, res) => {
   const templateVars = { 
     user: users[req.cookies["user_id"]]
   };
-  res.render("urls_register.ejs", templateVars);
+
+  if (req.cookies["user_id"]) {
+    res.redirect('/urls')
+  } else {
+    res.render("urls_register.ejs", templateVars);
+  }
+  
 });
 
 // Handle registration form - POST
@@ -134,7 +145,13 @@ app.get("/login", (req, res) => {
   const templateVars = { 
     user: users[req.cookies["user_id"]]
   };
-  res.render("urls_login.ejs", templateVars);
+
+  if (req.cookies["user_id"]) {
+    res.redirect('/urls')
+  } else {
+    res.render("urls_login.ejs", templateVars);
+  }
+
 });
 
 // Handle login form - GET
