@@ -9,6 +9,7 @@ const PORT = 8000;
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 
+
 /////////////////////////////////////////////////////////////////////////////
 // Middleware
 /////////////////////////////////////////////////////////////////////////////
@@ -17,9 +18,12 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieSession({ name: "session", keys: ["key1", "key2"] }))
 
+
 /////////////////////////////////////////////////////////////////////////////
 // Functions / Variables
 /////////////////////////////////////////////////////////////////////////////
+
+const { generateRandomString, userObjectfromEmail, urlsForUser } = require("./helpers")
 
 const urlDatabase = {
   "b2xVn2": {
@@ -45,31 +49,6 @@ const users = {
   }
 };
 
-const generateRandomString = function () {
-  return Math.random().toString(36).slice(2, 8);
-}
-
-// Function that returns user object from email. Returns undefined if email isn't in databse
-const userObjectfromEmail = function (mail, database) {
-  for (let user in database) {
-    if (mail === database[user].email) {
-      return database[user];
-    }
-  }
-  return undefined;
-};
-
-// Function that returns object containing all long and short urls of a user
-const urlsForUser = function (id) {
-  let objectOfUserURLS = {};
-  for (const shortUrl in urlDatabase) {
-    if (id === urlDatabase[shortUrl].userID) {
-      objectOfUserURLS[shortUrl] = urlDatabase[shortUrl];
-    }
-  }
-  return objectOfUserURLS; 
-};
-
 
 /////////////////////////////////////////////////////////////////////////////
 // Listener
@@ -87,7 +66,7 @@ app.listen(PORT, () => {
 // Display all urls - GET
 app.get("/urls", (req, res) => {
   if (req.session.user_id) {
-    const usersURLobject = urlsForUser(req.session.user_id)
+    const usersURLobject = urlsForUser(req.session.user_id, urlDatabase)
       // return object of urls only pretaining to 1 user_id
     const templateVars = { 
       urls: usersURLobject,
@@ -210,7 +189,7 @@ app.get("/urls/:shortUrl", (req, res) => {
   } else if (!req.session.user_id) {
     res.status(403).end('<h1>403: Forbidden</h1><h2>Must log in to see short url</h2>');
   } else {
-    const usersURLobject = urlsForUser(req.session.user_id);
+    const usersURLobject = urlsForUser(req.session.user_id, urlDatabase);
 
     const templateVars = { 
       shortUrl: req.params.shortUrl,
