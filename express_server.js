@@ -4,19 +4,18 @@
 
 const express = require("express");
 const app = express();
-app.set("view engine", "ejs");
 const PORT = 8000;
 
-const cookieParser = require('cookie-parser');
-
+const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
 
 /////////////////////////////////////////////////////////////////////////////
 // Middleware
 /////////////////////////////////////////////////////////////////////////////
 
+app.set("view engine", "ejs");
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-
 
 /////////////////////////////////////////////////////////////////////////////
 // Functions / Variables
@@ -149,11 +148,10 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const user = generateRandomString();
   const mail = req.body.email;
-  const pw = req.body.password;
-
+  const hashedPassword = bcrypt.hashSync(req.body.password, 10);
   const existingUserObject = userObjectfromEmail(mail, users);
 
-  if (!mail || !pw) {
+  if (!mail || !req.body.password) {
     res.status(400).end('<h1>400: Bad request</h1><h2>Both username and password are required</h2>');
   } else if (existingUserObject) {
     res.status(400).end('<h1>400: Bad request</h1><h2>This email is already registered</h2>');
@@ -161,7 +159,7 @@ app.post("/register", (req, res) => {
     users[user] = { 
       id: `${user}`,
       email: `${mail}`,
-      password: `${pw}` 
+      password: `${hashedPassword}` 
     };
     res.cookie("user_id", user);
     res.redirect("/urls");
@@ -191,7 +189,7 @@ app.post("/login", (req, res) => {
 
   if (!userObject) {
     res.status(403).end('<h1>403: Forbidden</h1><h2>Email is not registered</h2>');
-  } else if (mail !== userObject.email || pw !== userObject.password) {
+  } else if (mail !== userObject.email || !bcrypt.compareSync(pw, userObject.password)) {
     res.status(403).end('<h1>403: Forbidden</h1><h2>Email and password do not match</h2>');
   } else {
     res.cookie("user_id", userObject.id);
