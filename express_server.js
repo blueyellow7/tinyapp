@@ -121,6 +121,7 @@ app.post("/urls", (req, res) => {
     } //--> add entry to urlDatabase object -> { shortUrl: { longUrl: www... , userID: 2h23hz } }
 
     res.redirect(`/urls/${shortUrl}`); 
+    console.log(urlDatabase)
 
   } else {
     res.status(401).end('<h1>401: Forbidden</h1><h2>Must log in to shorten url</h2>');
@@ -205,7 +206,7 @@ app.post("/logout", (req, res) => {
 // Display single url (GET)
 app.get("/urls/:shortUrl", (req, res) => { 
   if (!urlDatabase[req.params.shortUrl]) {
-    res.status(404).end('<h1>403: Page not found</h1><h2>Short URL is not in database</h2>');
+    res.status(404).end('<h1>404: Page not found</h1><h2>Short URL is not in database</h2>');
   } else if (!req.cookies["user_id"]) {
     res.status(403).end('<h1>403: Forbidden</h1><h2>Must log in to see short url</h2>');
   } else {
@@ -227,18 +228,37 @@ app.get("/u/:shortUrl", (req, res) => {
   if (longUrl) {
     res.redirect(longUrl);
   } else {
-    res.status(400).send('<h1>400: Bad Request</h1><h2>Url is not in database</h2>');
+    res.status(404).end('<h1>404: Page not found</h1><h2>Short URL is not in database</h2>');
   }
 });
 
 // Edit and update a url - POST
 app.post("/urls/:shortUrl", (req, res) => {
-  urlDatabase[req.params.shortUrl].longUrl = req.body.urlEdit;
-  res.redirect("/urls");
+  if (!urlDatabase[req.params.shortUrl]) {
+    res.status(404).end('<h1>404: Page not found</h1><h2>Short URL is not in database</h2>');
+    
+  } else if (req.cookies["user_id"] !== urlDatabase[req.params.shortUrl].userID) {
+    res.status(403).send('<h1>403: Forbidden</h1><h2>You are not authorized to view this page.</h2>');
+
+  } else {
+    urlDatabase[req.params.shortUrl].longUrl = req.body.urlEdit;
+    console.log(urlDatabase)
+    res.redirect("/urls");
+  }
+  
 });
 
 // Delete url - POST
 app.post("/urls/:shortUrl/delete", (req, res) => {
-  delete urlDatabase[req.params.shortUrl]
-  res.redirect("/urls");
+  if (!urlDatabase[req.params.shortUrl]) {
+    res.status(404).end('<h1>404: Page not found</h1><h2>Short URL is not in database</h2>');
+
+  } else if (req.cookies["user_id"] !== urlDatabase[req.params.shortUrl].userID) {
+    res.status(403).send('<h1>403: Forbidden</h1><h2>You are not authorized to view this page.</h2>');
+
+  } else {
+    delete urlDatabase[req.params.shortUrl]
+    res.redirect("/urls");
+  }
+
 });
