@@ -15,14 +15,14 @@
     <%- include ('partials/_header.ejs') %>
     <div class="card text-center">
       <div class="card-body">
-        <h5 class="card-title">TinyURL for: <%= longURL %></h5>
+        <h5 class="card-title">TinyURL for: <%= longUrl %></h5>
         <p class="card-text">
-          Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
+          Short URL ID: <a href="/u/<%= shortUrl %>"><%= shortUrl %></a>
         </p>
         <div class="card-footer text-muted">
           <p></p>
           <h5>Edit</h5>
-          <form method="POST" action="/urls/<%= id%>">
+          <form method="POST" action="/urls/<%= shortUrl %>">
             <label for="urlEdit">New URL:</label>
             <input
               type="text"

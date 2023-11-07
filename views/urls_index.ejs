@@ -30,18 +30,18 @@
           </tr>
         </thead>
         <tbody>
-          <% for (let id in urls) { %> 
-            <!-- loops through keys. id = each key in the urlsDatabase object from express_server.js) -->
+          <% for (let shortUrl in urls) { %> 
+            <!-- loops through keys. shortUrl = each key in the usersURLSobject from express_server.js -->
             <tr> 
-              <td><%= id %></td> 
-              <td><%= urls[id] %></td>
+              <td><%= shortUrl %></td> 
+              <td><%= urls[shortUrl].longUrl %></td>
               <td>
-                <form method="GET" action="/urls/<%= id %>">
+                <form method="GET" action="/urls/<%= shortUrl %>">
                   <button type="submit" class="btn btn-secondary">Edit</button> 
                 </form>
               </td>
               <td>
-                <form method="POST" action="/urls/<%= id %>/delete">
+                <form method="POST" action="/urls/<%= shortUrl %>/delete">
                   <button type="submit" class="btn btn-danger">Delete</button> 
                 </form>
               </td>

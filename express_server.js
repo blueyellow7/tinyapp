@@ -25,11 +25,11 @@ app.use(express.urlencoded({ extended: true }));
 const urlDatabase = {
   "b2xVn2": {
     longUrl: "http://www.lighthouselabs.ca",
-    userID: 'randomuser1'
+    userID: 'userRandomID'
   },
   "9sm5xK": {
     longUrl: "http://www.google.com",
-    userID: 'randomuser2'
+    userID: 'user2RandomID'
   }
 };
 
@@ -82,15 +82,12 @@ app.listen(PORT, () => {
 // Routes
 /////////////////////////////////////////////////////////////////////////////
 
-// Redirect home (/) to /urls
-app.get("/", (req, res) => {
-  res.redirect("/urls");
-});
-
 // Display all urls - GET
 app.get("/urls", (req, res) => {
+  const usersURLobject = filterURLbyUserID(req.cookies["user_id"])
+    // returns object of urls only pretaining to 1 user_id
   const templateVars = { 
-    urls: urlDatabase,
+    urls: usersURLobject,
     user: users[req.cookies["user_id"]]
   };
   res.render("urls_index.ejs", templateVars);
@@ -111,11 +108,14 @@ app.get("/urls/new", (req, res) => {
 // Create new url. Redirect to its single url page - POST
 app.post("/urls", (req, res) => {
   if (req.cookies["user_id"]) {
-    const id = generateRandomString(); 
-    urlDatabase[id] = req.body.longURL; 
-      // add entry to urlDatabase object -> key = id: value = req.body.longURL
+    const shortUrl = generateRandomString(); 
+    urlDatabase[shortUrl] = {
+      longUrl: req.body.longUrl,
+      userID: req.cookies["user_id"]
+    }
+      // add entry to urlDatabase object -> { shortUrl: { longUrl: www... , userID: 2h23hz } }
     console.log(urlDatabase);
-    res.redirect(`/urls/${id}`); 
+    res.redirect(`/urls/${shortUrl}`); 
 
   } else {
     res.status(401).end('<h1>401: Forbidden</h1><h2>Must log in to shorten url</h2>');
@@ -198,18 +198,19 @@ app.post("/logout", (req, res) => {
 });
 
 // Display single url (GET)
-app.get("/urls/:id", (req, res) => {
+app.get("/urls/:shortUrl", (req, res) => {
+  const usersURLobject = filterURLbyUserID(req.cookies["user_id"]);
   const templateVars = { 
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    shortUrl: req.params.shortUrl,
+    longUrl: usersURLobject[req.params.shortUrl].longUrl,
     user: users[req.cookies["user_id"]]
   };
   res.render("urls_show.ejs", templateVars);
 });
 
 // Redirect to website from given shortened url - GET
-app.get("/u/:id", (req, res) => {
-  const longUrl = urlDatabase[req.params.id]
+app.get("/u/:shortUrl", (req, res) => {
+  const longUrl = urlDatabase[req.params.shortUrl].longUrl
   if (longUrl) {
     res.redirect(longUrl);
   } else {
@@ -218,14 +219,13 @@ app.get("/u/:id", (req, res) => {
 });
 
 // Edit and update a url - POST
-app.post("/urls/:id", (req, res) => {
-  console.log(req.body);
-  urlDatabase[req.params.id] = req.body.urlEdit;
+app.post("/urls/:shortUrl", (req, res) => {
+  urlDatabase[req.params.shortUrl].longUrl = req.body.urlEdit;
   res.redirect("/urls");
 });
 
 // Delete url - POST
-app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id]
+app.post("/urls/:shortUrl/delete", (req, res) => {
+  delete urlDatabase[req.params.shortUrl]
   res.redirect("/urls");
 });
