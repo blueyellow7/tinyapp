@@ -6,7 +6,7 @@ const express = require("express");
 const app = express();
 const PORT = 8000;
 
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 
 /////////////////////////////////////////////////////////////////////////////
@@ -14,8 +14,8 @@ const bcrypt = require("bcryptjs");
 /////////////////////////////////////////////////////////////////////////////
 
 app.set("view engine", "ejs");
-app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieSession({ name: "session", keys: ["key1", "key2"] }))
 
 /////////////////////////////////////////////////////////////////////////////
 // Functions / Variables
