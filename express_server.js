@@ -59,14 +59,15 @@ const userObjectfromEmail = function (mail, database) {
   return undefined; // returns undefined if email does't already exist in the database
 };
 
-const filterURLbyUserID = function (idOfUser) {
+// function that returns object with all long/short urls of a user
+const urlsForUser = function (id) {
   let objectOfUserURLS = {};
   for (const shortUrl in urlDatabase) {
-    if (idOfUser === urlDatabase[shortUrl].userID) {
+    if (id === urlDatabase[shortUrl].userID) {
       objectOfUserURLS[shortUrl] = urlDatabase[shortUrl];
     }
   }
-  return objectOfUserURLS;
+  return objectOfUserURLS; 
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -84,13 +85,17 @@ app.listen(PORT, () => {
 
 // Display all urls - GET
 app.get("/urls", (req, res) => {
-  const usersURLobject = filterURLbyUserID(req.cookies["user_id"])
+  if (req.cookies["user_id"]) {
+    const usersURLobject = urlsForUser(req.cookies["user_id"])
     // returns object of urls only pretaining to 1 user_id
-  const templateVars = { 
-    urls: usersURLobject,
-    user: users[req.cookies["user_id"]]
-  };
+    const templateVars = { 
+      urls: usersURLobject,
+      user: users[req.cookies["user_id"]]
+    };
   res.render("urls_index.ejs", templateVars);
+  } else {
+    res.status(403).end('<h1>403: Forbidden</h1><h2>Please log in to see your urls</h2>');
+  }
 });
 
 // Display page to input new url - GET
@@ -109,12 +114,12 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   if (req.cookies["user_id"]) {
     const shortUrl = generateRandomString(); 
+
     urlDatabase[shortUrl] = {
       longUrl: req.body.longUrl,
       userID: req.cookies["user_id"]
-    }
-      // add entry to urlDatabase object -> { shortUrl: { longUrl: www... , userID: 2h23hz } }
-    console.log(urlDatabase);
+    } //--> add entry to urlDatabase object -> { shortUrl: { longUrl: www... , userID: 2h23hz } }
+
     res.redirect(`/urls/${shortUrl}`); 
 
   } else {
@@ -198,14 +203,22 @@ app.post("/logout", (req, res) => {
 });
 
 // Display single url (GET)
-app.get("/urls/:shortUrl", (req, res) => {
-  const usersURLobject = filterURLbyUserID(req.cookies["user_id"]);
-  const templateVars = { 
-    shortUrl: req.params.shortUrl,
-    longUrl: usersURLobject[req.params.shortUrl].longUrl,
-    user: users[req.cookies["user_id"]]
-  };
-  res.render("urls_show.ejs", templateVars);
+app.get("/urls/:shortUrl", (req, res) => { 
+  if (!urlDatabase[req.params.shortUrl]) {
+    res.status(404).end('<h1>403: Page not found</h1><h2>Short URL is not in database</h2>');
+  } else if (!req.cookies["user_id"]) {
+    res.status(403).end('<h1>403: Forbidden</h1><h2>Must log in to see short url</h2>');
+  } else {
+    const usersURLobject = urlsForUser(req.cookies["user_id"]);
+
+    const templateVars = { 
+      shortUrl: req.params.shortUrl,
+      longUrl: usersURLobject[req.params.shortUrl].longUrl,
+      user: users[req.cookies["user_id"]]
+    };
+
+    res.render("urls_show.ejs", templateVars);
+  }
 });
 
 // Redirect to website from given shortened url - GET
