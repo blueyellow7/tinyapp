@@ -86,12 +86,12 @@ app.listen(PORT, () => {
 
 // Display all urls - GET
 app.get("/urls", (req, res) => {
-  if (req.cookies["user_id"]) {
-    const usersURLobject = urlsForUser(req.cookies["user_id"])
+  if (req.session.user_id) {
+    const usersURLobject = urlsForUser(req.session.user_id)
       // return object of urls only pretaining to 1 user_id
     const templateVars = { 
       urls: usersURLobject,
-      user: users[req.cookies["user_id"]]
+      user: users[req.session.user_id]
     };
     res.render("urls_index.ejs", templateVars);
   } else {
@@ -101,9 +101,9 @@ app.get("/urls", (req, res) => {
 
 // Display page to input new url - GET
 app.get("/urls/new", (req, res) => {
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     const templateVars = { 
-      user: users[req.cookies["user_id"]]
+      user: users[req.session.user_id]
     };
     res.render("urls_new.ejs", templateVars);
   } else {
@@ -113,12 +113,12 @@ app.get("/urls/new", (req, res) => {
 
 // Create new url. Redirect to its single url page - POST
 app.post("/urls", (req, res) => {
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     const shortUrl = generateRandomString(); 
 
     urlDatabase[shortUrl] = {
       longUrl: req.body.longUrl,
-      userID: req.cookies["user_id"]
+      userID: req.session.user_id
     } //--> add entry to urlDatabase object -> { shortUrl: { longUrl: www... , userID: 2h23hz } }
 
     res.redirect(`/urls/${shortUrl}`); 
@@ -133,10 +133,10 @@ app.post("/urls", (req, res) => {
 // Display registration form - GET
 app.get("/register", (req, res) => {
   const templateVars = { 
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   };
 
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     res.redirect('/urls')
   } else {
     res.render("urls_register.ejs", templateVars);
@@ -161,7 +161,7 @@ app.post("/register", (req, res) => {
       email: `${mail}`,
       password: `${hashedPassword}` 
     };
-    res.cookie("user_id", user);
+    req.session.user_id = user;
     res.redirect("/urls");
   }
   console.log(users)
@@ -170,10 +170,10 @@ app.post("/register", (req, res) => {
 // Display login form - GET
 app.get("/login", (req, res) => {
   const templateVars = { 
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   };
 
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     res.redirect('/urls')
   } else {
     res.render("urls_login.ejs", templateVars);
@@ -192,14 +192,14 @@ app.post("/login", (req, res) => {
   } else if (mail !== userObject.email || !bcrypt.compareSync(pw, userObject.password)) {
     res.status(403).end('<h1>403: Forbidden</h1><h2>Email and password do not match</h2>');
   } else {
-    res.cookie("user_id", userObject.id);
+    req.session.user_id = userObject.id;
     res.redirect("/urls"); 
   }
 });
 
 // Clear cookie (logs you out) - POST
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/login");
 });
 
@@ -207,15 +207,15 @@ app.post("/logout", (req, res) => {
 app.get("/urls/:shortUrl", (req, res) => { 
   if (!urlDatabase[req.params.shortUrl]) {
     res.status(404).end('<h1>404: Page not found</h1><h2>Short URL is not in database</h2>');
-  } else if (!req.cookies["user_id"]) {
+  } else if (!req.session.user_id) {
     res.status(403).end('<h1>403: Forbidden</h1><h2>Must log in to see short url</h2>');
   } else {
-    const usersURLobject = urlsForUser(req.cookies["user_id"]);
+    const usersURLobject = urlsForUser(req.session.user_id);
 
     const templateVars = { 
       shortUrl: req.params.shortUrl,
       longUrl: usersURLobject[req.params.shortUrl].longUrl,
-      user: users[req.cookies["user_id"]]
+      user: users[req.session.user_id]
     };
 
     res.render("urls_show.ejs", templateVars);
@@ -237,7 +237,7 @@ app.post("/urls/:shortUrl", (req, res) => {
   if (!urlDatabase[req.params.shortUrl]) {
     res.status(404).end('<h1>404: Page not found</h1><h2>Short URL is not in database</h2>');
     
-  } else if (req.cookies["user_id"] !== urlDatabase[req.params.shortUrl].userID) {
+  } else if (req.session.user_id !== urlDatabase[req.params.shortUrl].userID) {
     res.status(403).send('<h1>403: Forbidden</h1><h2>You are not authorized to view this page.</h2>');
 
   } else {
@@ -253,7 +253,7 @@ app.post("/urls/:shortUrl/delete", (req, res) => {
   if (!urlDatabase[req.params.shortUrl]) {
     res.status(404).end('<h1>404: Page not found</h1><h2>Short URL is not in database</h2>');
 
-  } else if (req.cookies["user_id"] !== urlDatabase[req.params.shortUrl].userID) {
+  } else if (req.session.user_id !== urlDatabase[req.params.shortUrl].userID) {
     res.status(403).send('<h1>403: Forbidden</h1><h2>You are not authorized to view this page.</h2>');
 
   } else {
