@@ -50,16 +50,17 @@ const generateRandomString = function () {
   return Math.random().toString(36).slice(2, 8);
 }
 
+// Function that returns user object from email. Returns undefined if email isn't in databse
 const userObjectfromEmail = function (mail, database) {
   for (let user in database) {
     if (mail === database[user].email) {
       return database[user];
     }
   }
-  return undefined; // returns undefined if email does't already exist in the database
+  return undefined;
 };
 
-// function that returns object with all long/short urls of a user
+// Function that returns object containing all long and short urls of a user
 const urlsForUser = function (id) {
   let objectOfUserURLS = {};
   for (const shortUrl in urlDatabase) {
@@ -69,6 +70,7 @@ const urlsForUser = function (id) {
   }
   return objectOfUserURLS; 
 };
+
 
 /////////////////////////////////////////////////////////////////////////////
 // Listener
@@ -87,12 +89,12 @@ app.listen(PORT, () => {
 app.get("/urls", (req, res) => {
   if (req.cookies["user_id"]) {
     const usersURLobject = urlsForUser(req.cookies["user_id"])
-    // returns object of urls only pretaining to 1 user_id
+      // return object of urls only pretaining to 1 user_id
     const templateVars = { 
       urls: usersURLobject,
       user: users[req.cookies["user_id"]]
     };
-  res.render("urls_index.ejs", templateVars);
+    res.render("urls_index.ejs", templateVars);
   } else {
     res.status(403).end('<h1>403: Forbidden</h1><h2>Please log in to see your urls</h2>');
   }
