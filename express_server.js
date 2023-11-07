@@ -63,6 +63,15 @@ app.listen(PORT, () => {
 // Routes
 /////////////////////////////////////////////////////////////////////////////
 
+// Redirect to urls from ('/')
+app.get('/', (req, res) => {
+  if (req.session.user_id) {
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
+});
+
 // Display all urls - GET
 app.get("/urls", (req, res) => {
   if (req.session.user_id) {
@@ -203,11 +212,10 @@ app.get("/urls/:shortUrl", (req, res) => {
 
 // Redirect to website from given shortened url - GET
 app.get("/u/:shortUrl", (req, res) => {
-  const longUrl = urlDatabase[req.params.shortUrl].longUrl
-  if (longUrl) {
-    res.redirect(longUrl);
-  } else {
+  if (!urlDatabase[req.params.shortUrl]) {
     res.status(404).end('<h1>404: Page not found</h1><h2>Short URL is not in database</h2>');
+  } else {
+    res.redirect(urlDatabase[req.params.shortUrl].longUrl);
   }
 });
 
